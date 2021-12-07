@@ -48,6 +48,9 @@ public final class LeafErrorMiddleware<T: Encodable>: Middleware {
     }
     
     private func handleError(for req: Request, status: HTTPStatus, error: Error) -> EventLoopFuture<Response> {
+        if error is AbortRaw {
+            return req.eventLoop.makeFailedFuture(error)
+        }
         if (self.errorType == .all || self.errorType == .notFound) && status == .notFound {
             return contextGenerator(status, error, req).flatMap { context in
                 return req.view.render("404", context).encodeResponse(for: req).map { res in
